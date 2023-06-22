@@ -167,10 +167,19 @@ interface
 !       indicates that an error occurred with the error codes as
 !       indicated above. */
 !   int flotsam_new_background_profile();
+  integer(C_INT) function flotsam_new_background_profile() bind(C)
+    use, intrinsic :: ISO_C_BINDING
+  end function flotsam_new_background_profile
 
 !   /** Free the memory associated with background profile context with
 !       ID "iprof", or return FLOTSAM_INVALID_CONTEXT if not recognized */
 !   int flotsam_free_background_profile(int iprof);
+  integer(C_INT) function flotsam_free_background_profile(iprof) bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), intent(in), value :: iprof
+  end function flotsam_free_background_profile
+
+
 
 !   /** Reset the size of a background profile context with ID
 !       "iprof" */
@@ -186,6 +195,13 @@ interface
 !      int n,                               /**< Number of layers in profile */
 !      const flotsam_real* edge_pressure    /**< Edge pressure in Pa (n+1 elements) */
 ! 				     );
+  integer(C_INT) function flotsam_set_edge_pressure(iprof, n, edge_pressure) &
+      & bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), intent(in), value :: iprof
+    integer(C_INT), intent(in), value :: n
+    real(FLOTSAM_REAL), intent(in)    :: edge_pressure(n)
+  end function flotsam_set_edge_pressure
 
 !   /** Set layer-mean temperature in a background profile context with
 !       ID "iprof" */
@@ -236,6 +252,11 @@ interface
 !       the Planck function from the atmospheric profile indicated by
 !       "iprof" at the satellite channel indicated by "ichan" */
 !   int flotsam_init_band_profile(int iband, int ichan, int iprof);
+  integer(C_INT) function flotsam_init_band_profile(iband, ichan, iprof) &
+        & bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), intent(in), value :: iband, ichan, iprof
+  end function flotsam_init_band_profile
 
   !> Initialize a band profile context indicated by "iband" by
   !> calculating the optical properties of the atmospheric profile and
@@ -287,6 +308,13 @@ interface
   !   int flotsam_set_gas_absorption_optical_depth(int iband,         !< Band profile ID 
   ! 				       int n,                     !< Number of layers 
   ! 				       const flotsam_real* od);   !< Layer optical depth 
+  integer(C_INT) function flotsam_set_gas_absorption_optical_depth(&
+      & iband, n, od) bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), intent(in) :: iband              !< Band profile ID
+    integer(C_INT), intent(in) :: n                  !< Number of layers
+    real(FLOTSAM_REAL), intent(in) :: od(n)          !< Layer optical depth
+  end function flotsam_set_gas_absorption_optical_depth
   
   !    Get the Rayleigh optical depth of the entire atmosphere 
   !   int flotsam_get_total_rayleigh_optical_depth(int iband,         !< Band profile ID 
