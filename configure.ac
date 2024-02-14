@@ -1,10 +1,10 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.63])
+AC_PREREQ([2.71])
 
 # Remember to update the version number for a new release
-AC_INIT([FLOTSAM], [0.5.23], [r.j.hogan@ecmwf.int],[flotsam])
+AC_INIT([FLOTSAM],[0.5.23],[r.j.hogan@ecmwf.int],[flotsam])
 
 # Most code is C++ but there is some C and some Fortran
 AC_LANG([C++])
@@ -22,7 +22,7 @@ AC_PROG_CXX
 #AC_PROG_FC
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 #AC_PROG_RANLIB
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Check for OpenMP
 AC_OPENMP

@@ -5,13 +5,13 @@
 !
 !   This file provides a Fortran interface to the FLOTSAM library
 !
-  
+
 ! GENERAL DEFINITIONS
 
 ! This is the type used for all floating-point variables in both
 ! the interface and internally in the library.
 #define FLOTSAM_REAL C_DOUBLE
-  
+
 ! /** Gas identifiers */
 ! typedef enum {
 !   FLOTSAM_H2O = 0,
@@ -62,7 +62,7 @@ integer, parameter :: FLOTSAM_SUCCESS = 0
 interface
 
   !> @name Support functions
-  !> @{ 
+  !> @{
 
   !> Return a pointer to a NULL-terminated string explaining an error
   !> code
@@ -90,7 +90,7 @@ interface
   real(FLOTSAM_REAL) function flotsam_scattering_angle(mu_sun, mu_inst, azim) bind(C)
     use, intrinsic :: ISO_C_BINDING
     real(FLOTSAM_REAL), intent(in), value :: mu_sun   !> Cosine of solar zenith angle
-    real(FLOTSAM_REAL), intent(in), value :: mu_inst  !> Cosine of instrument zenith angle 
+    real(FLOTSAM_REAL), intent(in), value :: mu_inst  !> Cosine of instrument zenith angle
     real(FLOTSAM_REAL), intent(in), value :: azim     !> Azimuthal separation (radians)
   end function flotsam_scattering_angle
 
@@ -123,7 +123,7 @@ interface
   !> indicated above.
   integer(C_INT) function flotsam_new_channel_rayleigh_only(wavelength) bind(C)
     use, intrinsic :: ISO_C_BINDING
-    real(FLOTSAM_REAL), intent(in) :: wavelength
+    real(FLOTSAM_REAL), intent(in), value :: wavelength
   end function flotsam_new_channel_rayleigh_only
 
   !> Create new satellite channel context in vacuum, or equivalently
@@ -232,7 +232,7 @@ interface
   !> A band profile context stores the optical properties of the
   !> atmosphere and surface at the wavelength of a particular
   !> satellite channel.
-  
+
   !> Create a new band profile context, and return an ID for that
   !> context. The ID is positive or zero; a negative number indicates
   !> that an error occurred with the error codes as indicated above.
@@ -297,32 +297,45 @@ interface
   end function flotsam_set_geometry
 
   !> Override the Rayleigh optical depth of each layer, where the
-  !> number of layers must match the layers already in the band 
-  !   int flotsam_set_rayleigh_optical_depth(int iband,               !< Band profile ID 
-  ! 					 int n,                   !< Number of layers 
-  ! 					 const flotsam_real* od); !< Layer optical depth 
+  !> number of layers must match the layers already in the band
+  !   int flotsam_set_rayleigh_optical_depth(int iband,               !< Band profile ID
+  ! 					 int n,                   !< Number of layers
+  ! 					 const flotsam_real* od); !< Layer optical depth
+  integer(C_INT) function flotsam_set_rayleigh_optical_depth(&
+      & iband, n, od) bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), value, intent(in) :: iband              !< Band profile ID
+    integer(C_INT), value, intent(in) :: n                  !< Number of layers
+    real(FLOTSAM_REAL), intent(in) :: od(n)          !< Layer optical depth
+  end function flotsam_set_rayleigh_optical_depth
 
   !    Override the gas absorption optical depth of each layer, where
   !       the number of layers must match the layers already in the
-  !       band 
-  !   int flotsam_set_gas_absorption_optical_depth(int iband,         !< Band profile ID 
-  ! 				       int n,                     !< Number of layers 
-  ! 				       const flotsam_real* od);   !< Layer optical depth 
+  !       band
+  !   int flotsam_set_gas_absorption_optical_depth(int iband,         !< Band profile ID
+  ! 				       int n,                     !< Number of layers
+  ! 				       const flotsam_real* od);   !< Layer optical depth
   integer(C_INT) function flotsam_set_gas_absorption_optical_depth(&
       & iband, n, od) bind(C)
     use, intrinsic :: ISO_C_BINDING
-    integer(C_INT), intent(in) :: iband              !< Band profile ID
-    integer(C_INT), intent(in) :: n                  !< Number of layers
+    integer(C_INT), value, intent(in) :: iband              !< Band profile ID
+    integer(C_INT), value, intent(in) :: n                  !< Number of layers
     real(FLOTSAM_REAL), intent(in) :: od(n)          !< Layer optical depth
   end function flotsam_set_gas_absorption_optical_depth
-  
-  !    Get the Rayleigh optical depth of the entire atmosphere 
-  !   int flotsam_get_total_rayleigh_optical_depth(int iband,         !< Band profile ID 
-  ! 					       flotsam_real* od); !< Returned optical depth 
 
-  !    Get the gas absorption optical depth of the entire atmosphere 
-  !   int flotsam_get_total_gas_absorption_optical_depth(int iband,         !< Band profile ID 
-  ! 						     flotsam_real* od); !< Returned optical depth 
+  !    Get the Rayleigh optical depth of the entire atmosphere
+  !   int flotsam_get_total_rayleigh_optical_depth(int iband,         !< Band profile ID
+  ! 					       flotsam_real* od); !< Returned optical depth
+  integer(C_INT) function flotsam_get_total_rayleigh_optical_depth(&
+      & iband, od) bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), value, intent(in) :: iband              !< Band profile ID
+    real(FLOTSAM_REAL), intent(out) :: od          !< Layer optical depth
+  end function flotsam_get_total_rayleigh_optical_depth
+
+  !    Get the gas absorption optical depth of the entire atmosphere
+  !   int flotsam_get_total_gas_absorption_optical_depth(int iband,         !< Band profile ID
+  ! 						     flotsam_real* od); !< Returned optical depth
 
   !> @}
 
@@ -330,7 +343,7 @@ interface
 
   !> An Ocean-BRDF context stores look-up tables needed to compute the
   !> ocean bi-directional reflectance function at a particular
-  !> wavelength 
+  !> wavelength
 
   !> @{
 
@@ -348,8 +361,8 @@ interface
 
 
   !> As flotsam_new_ocean_brdf but also specifying the ocean pigment
-  !> concentration, salinity, whether or not to apply shadowing 
-  !> and the shape of the function describing the probability 
+  !> concentration, salinity, whether or not to apply shadowing
+  !> and the shape of the function describing the probability
   !> distribution of ocean waves
   integer(C_INT) function flotsam_new_ocean_brdf_detailed(wavelength, nwinds, &
        &  winds, pigment_conc_mg_m3, salinity_ppt, apply_shadowing, slope_dist_shape) bind(C)
@@ -360,7 +373,7 @@ interface
     real(FLOTSAM_REAL), intent(in) :: pigment_conc_mg_m3
     real(FLOTSAM_REAL), intent(in) :: salinity_ppt
     integer(C_INT),     intent(in) :: apply_shadowing  !< 1=yes, 0=no
-    integer(C_INT),     intent(in) :: slope_dist_shape !< 1=anisotropic (wind dependent) 
+    integer(C_INT),     intent(in) :: slope_dist_shape !< 1=anisotropic (wind dependent)
                                !< 2=anisotropic with Gram-Charlier coefficients (default)
                                !< 3=isotropic (wind independent)
   end function flotsam_new_ocean_brdf_detailed
@@ -407,107 +420,127 @@ interface
   integer(C_INT) function flotsam_reflectance(iband, nalbedo, albedo, &
        &  n, loc, od, ssa, pf, pfc, reflectance) bind(C)
     use, intrinsic :: ISO_C_BINDING
-    integer(C_INT), intent(in), value :: iband         !< Band profile ID 
-    integer(C_INT), intent(in), value :: nalbedo       !< Number of albedo components 
-    real(FLOTSAM_REAL), intent(in) :: albedo(nalbedo)  !< Surface albedo components 
-    integer(C_INT), intent(in), value :: n             !< Number of particulate layers 
-    integer(C_INT), intent(in) :: loc(n)               !< Location of particulate layers 
-    real(FLOTSAM_REAL), intent(in) :: od(n)            !< Optical depth 
-    real(FLOTSAM_REAL), intent(in) :: ssa(n)           !< Single-scattering albedo 
-    real(FLOTSAM_REAL), intent(in) :: pf(n)            !< Phase func for single scattering 
-    real(FLOTSAM_REAL), intent(in) :: pfc(*)         !< Phase function components 
-    real(FLOTSAM_REAL), intent(out) :: reflectance !< Returned reflectance 
+    integer(C_INT), intent(in), value :: iband         !< Band profile ID
+    integer(C_INT), intent(in), value :: nalbedo       !< Number of albedo components
+    real(FLOTSAM_REAL), intent(in) :: albedo(nalbedo)  !< Surface albedo components
+    integer(C_INT), intent(in), value :: n             !< Number of particulate layers
+    integer(C_INT), intent(in) :: loc(n)               !< Location of particulate layers
+    real(FLOTSAM_REAL), intent(in) :: od(n)            !< Optical depth
+    real(FLOTSAM_REAL), intent(in) :: ssa(n)           !< Single-scattering albedo
+    real(FLOTSAM_REAL), intent(in) :: pf(n)            !< Phase func for single scattering
+    real(FLOTSAM_REAL), intent(in) :: pfc(*)         !< Phase function components
+    real(FLOTSAM_REAL), intent(out) :: reflectance !< Returned reflectance
   end function flotsam_reflectance
-  
+
   !    As flotsam_reflectance but return an array whose elements are
   !       [0] reflectance, [1] reflectance due to quasi-single scattering,
   !       [2] reflectance involving the lobe flux, [3] reflectance
   !       involving the diffuse flux, [4] surface contribution to
   !       reflectance, and [5] top-of-atmosphere normalized upwelling
-  !       flux.  Note that elements [1] to [4] sum to element [0]. 
-  !   int flotsam_reflectance_components(int iband,  !< Band profile ID 
-  ! 		     int nalbedo,                !< Number of albedo components 
-  ! 		     const flotsam_real* albedo, !< Surface albedo components 
-  ! 		     int n,                      !< Number of particulate layers 
-  ! 		     const int* loc,             !< Location of particulate layers 
-  ! 		     const flotsam_real* od,     !< Optical depth 
-  ! 		     const flotsam_real* ssa,    !< Single-scattering albedo 
-  ! 		     const flotsam_real* pf,     !< Phase func for single scattering 
-  ! 		     const flotsam_real* pfc,    !< Phase function components 
-  ! 		     flotsam_real data[FLOTSAM_NUM_COMPONENTS] !< Returned data 
+  !       flux.  Note that elements [1] to [4] sum to element [0].
+  !   int flotsam_reflectance_components(int iband,  !< Band profile ID
+  ! 		     int nalbedo,                !< Number of albedo components
+  ! 		     const flotsam_real* albedo, !< Surface albedo components
+  ! 		     int n,                      !< Number of particulate layers
+  ! 		     const int* loc,             !< Location of particulate layers
+  ! 		     const flotsam_real* od,     !< Optical depth
+  ! 		     const flotsam_real* ssa,    !< Single-scattering albedo
+  ! 		     const flotsam_real* pf,     !< Phase func for single scattering
+  ! 		     const flotsam_real* pfc,    !< Phase function components
+  ! 		     flotsam_real data[FLOTSAM_NUM_COMPONENTS] !< Returned data
   ! 				     );
-  
+
   !    As flotsam_reflectance, but with particulate variables specified at all
 !       heights.  "n" must be equal to the number of layers in the band
 !       profile, or a FLOTSAM_INCORRECT_NUMBER_OF_LAYERS error will be
-!       returned. 
-!   int flotsam_reflectance_unindexed(int iband,               !< Band profile ID 
-! 				    int nalbedo,             !< Number of albedo components 
-! 				    const flotsam_real* albedo, !< Surface albedo components 
-! 				    int n,                   !< Number of particulate layers 
-! 				    const flotsam_real* od,  !< Optical depth 
-! 				    const flotsam_real* ssa, !< Single-scattering albedo 
-! 				    const flotsam_real* pf,  !< Phase func for single scattering 
-! 				    const flotsam_real* pfc, !< Phase function components 
-! 				    flotsam_real* reflectance!< Returned reflectance 
+!       returned.
+!   int flotsam_reflectance_unindexed(int iband,               !< Band profile ID
+! 				    int nalbedo,             !< Number of albedo components
+! 				    const flotsam_real* albedo, !< Surface albedo components
+! 				    int n,                   !< Number of particulate layers
+! 				    const flotsam_real* od,  !< Optical depth
+! 				    const flotsam_real* ssa, !< Single-scattering albedo
+! 				    const flotsam_real* pf,  !< Phase func for single scattering
+! 				    const flotsam_real* pfc, !< Phase function components
+! 				    flotsam_real* reflectance!< Returned reflectance
 ! 				    );
 
 !    As flotsam_reflectance, but also computes the derivatives of the
 !       reflectance with respect to the input particulate optical
 !       properties. This function only works if the FLOTSAM library was
 !       compiled with the Adept automatic differentiation library,
-!       otherwise it returns FLOTSAM_FEATURE_NOT_AVAILABLE. 
-!   int flotsam_reflectance_jacobian(int iband,               !< Band profile ID 
-! 				   int nalbedo,             !< Number of albedo components 
-! 				   const flotsam_real* albedo, !< Surface albedo components 
-! 				   int n,                   !< Number of particulate layers 
-! 				   const int* loc,          !< Location of particulate layers 
-! 				   const flotsam_real* od,  !< Optical depth 
-! 				   const flotsam_real* ssa, !< Single-scattering albedo 
-! 				   const flotsam_real* pf,  !< Phase func for single scattering 
-! 				   const flotsam_real* pfc, !< Phase function components 
-! 				   flotsam_real* reflectance,!< Returned reflectance 
-! 				   flotsam_real* d_albedo,  !< d(reflectance)/d(albedo) 
-! 				   flotsam_real* d_od,      !< d(reflectance)/d(od) 
-! 				   flotsam_real* d_ssa,     !< d(reflectance)/d(ssa) 
-! 				   flotsam_real* d_pf,      !< d(reflectance)/d(pf) 
-! 				   flotsam_real* d_pfc      !< d(reflectance)/d(pfc) 
-! 				   );
-  
+!       otherwise it returns FLOTSAM_FEATURE_NOT_AVAILABLE.
+   integer(C_INT) function flotsam_reflectance_jacobian(iband, nalbedo, albedo, &
+       &  n, loc, od, ssa, pf, pfc, reflectance, d_albedo, d_od, d_ssa, d_pf, d_pfc) bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), intent(in), value :: iband         !< Band profile ID
+    integer(C_INT), intent(in), value :: nalbedo       !< Number of albedo components
+    real(FLOTSAM_REAL), intent(in) :: albedo(nalbedo)  !< Surface albedo components
+    integer(C_INT), intent(in), value :: n             !< Number of particulate layers
+    integer(C_INT), intent(in) :: loc(n)               !< Location of particulate layers
+    real(FLOTSAM_REAL), intent(in) :: od(n)            !< Optical depth
+    real(FLOTSAM_REAL), intent(in) :: ssa(n)           !< Single-scattering albedo
+    real(FLOTSAM_REAL), intent(in) :: pf(n)            !< Phase func for single scattering
+    real(FLOTSAM_REAL), intent(in) :: pfc(*)         !< Phase function components
+    real(FLOTSAM_REAL), intent(out) :: reflectance !< Returned reflectance
+    real(FLOTSAM_REAL), intent(out) :: d_albedo
+    real(FLOTSAM_REAL), intent(out) :: d_od
+    real(FLOTSAM_REAL), intent(out) :: d_ssa
+    real(FLOTSAM_REAL), intent(out) :: d_pf
+    real(FLOTSAM_REAL), intent(out) :: d_pfc(*)
+  end function flotsam_reflectance_jacobian
+
+!    As flotsam_reflectance_jacobian, but only computes jacobian for AOD
+   integer(C_INT) function flotsam_reflectance_jacobian_od(iband, nalbedo, albedo, &
+       &  n, loc, od, ssa, pf, pfc, reflectance, d_od) bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), intent(in), value :: iband         !< Band profile ID
+    integer(C_INT), intent(in), value :: nalbedo       !< Number of albedo components
+    real(FLOTSAM_REAL), intent(in) :: albedo(nalbedo)  !< Surface albedo components
+    integer(C_INT), intent(in), value :: n             !< Number of particulate layers
+    integer(C_INT), intent(in) :: loc(n)               !< Location of particulate layers
+    real(FLOTSAM_REAL), intent(in) :: od(n)            !< Optical depth
+    real(FLOTSAM_REAL), intent(in) :: ssa(n)           !< Single-scattering albedo
+    real(FLOTSAM_REAL), intent(in) :: pf(n)            !< Phase func for single scattering
+    real(FLOTSAM_REAL), intent(in) :: pfc(*)         !< Phase function components
+    real(FLOTSAM_REAL), intent(out) :: reflectance !< Returned reflectance
+    real(FLOTSAM_REAL), intent(out) :: d_od
+  end function flotsam_reflectance_jacobian_od
+
 !    As flotsam_reflectance_jacobian, but avoiding the Adept start-up cost by
 !       keeping the Adept stack in global memory - this is faster but is
-!       thread unsafe 
-!   int flotsam_reflectance_jacobian_thread_unsafe(int iband, !< Band profile ID 
-! 				   int nalbedo,             !< Number of albedo components 
-! 				   const flotsam_real* albedo, !< Surface albedo components 
-! 				   int n,                   !< Number of particulate layers 
-! 				   const int* loc,          !< Location of particulate layers 
-! 				   const flotsam_real* od,  !< Optical depth 
-! 				   const flotsam_real* ssa, !< Single-scattering albedo 
-! 				   const flotsam_real* pf,  !< Phase func for single scattering 
-! 				   const flotsam_real* pfc, !< Phase function components 
-! 				   flotsam_real* reflectance,!< Returned reflectance 
-! 				   flotsam_real* d_albedo,  !< d(reflectance)/d(albedo) 
-! 				   flotsam_real* d_od,      !< d(reflectance)/d(od) 
-! 				   flotsam_real* d_ssa,     !< d(reflectance)/d(ssa) 
-! 				   flotsam_real* d_pf,      !< d(reflectance)/d(pf) 
-! 				   flotsam_real* d_pfc      !< d(reflectance)/d(pfc) 
+!       thread unsafe
+!   int flotsam_reflectance_jacobian_thread_unsafe(int iband, !< Band profile ID
+! 				   int nalbedo,             !< Number of albedo components
+! 				   const flotsam_real* albedo, !< Surface albedo components
+! 				   int n,                   !< Number of particulate layers
+! 				   const int* loc,          !< Location of particulate layers
+! 				   const flotsam_real* od,  !< Optical depth
+! 				   const flotsam_real* ssa, !< Single-scattering albedo
+! 				   const flotsam_real* pf,  !< Phase func for single scattering
+! 				   const flotsam_real* pfc, !< Phase function components
+! 				   flotsam_real* reflectance,!< Returned reflectance
+! 				   flotsam_real* d_albedo,  !< d(reflectance)/d(albedo)
+! 				   flotsam_real* d_od,      !< d(reflectance)/d(od)
+! 				   flotsam_real* d_ssa,     !< d(reflectance)/d(ssa)
+! 				   flotsam_real* d_pf,      !< d(reflectance)/d(pf)
+! 				   flotsam_real* d_pfc      !< d(reflectance)/d(pfc)
 ! 				   );
 
 !    As flotsam_reflectance but writes an ASCII file containing the
 !       results of internal calculations, such as profiles of different
-!       components of the radiation distribution. 
-!   int flotsam_reflectance_write_internals(int iband,  !< Band profile ID 
-! 		     int nalbedo,                !< Number of albedo components 
-! 		     const flotsam_real* albedo, !< Surface albedo components 
-! 		     int n,                      !< Number of particulate layers 
-! 		     const int* loc,             !< Location of particulate layers 
-! 		     const flotsam_real* od,     !< Optical depth 
-! 		     const flotsam_real* ssa,    !< Single-scattering albedo 
-! 		     const flotsam_real* pf,     !< Phase func for single scattering 
-! 		     const flotsam_real* pfc,    !< Phase function components 
-! 		     flotsam_real data[FLOTSAM_NUM_COMPONENTS], !< Returned data 
-! 		     const char* file_name     !< Name of file to write 
+!       components of the radiation distribution.
+!   int flotsam_reflectance_write_internals(int iband,  !< Band profile ID
+! 		     int nalbedo,                !< Number of albedo components
+! 		     const flotsam_real* albedo, !< Surface albedo components
+! 		     int n,                      !< Number of particulate layers
+! 		     const int* loc,             !< Location of particulate layers
+! 		     const flotsam_real* od,     !< Optical depth
+! 		     const flotsam_real* ssa,    !< Single-scattering albedo
+! 		     const flotsam_real* pf,     !< Phase func for single scattering
+! 		     const flotsam_real* pfc,    !< Phase function components
+! 		     flotsam_real data[FLOTSAM_NUM_COMPONENTS], !< Returned data
+! 		     const char* file_name     !< Name of file to write
 ! 					  );
 
   !> @}
