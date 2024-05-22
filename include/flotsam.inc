@@ -491,6 +491,24 @@ interface
   end function flotsam_reflectance_jacobian
 
 !    As flotsam_reflectance_jacobian, but only computes jacobian for AOD
+   integer(C_INT) function flotsam_radiance_jacobian_od(iband, nalbedo, albedo, &
+       &  n, loc, od, ssa, pf, pfc, reflectance, d_od) bind(C)
+    use, intrinsic :: ISO_C_BINDING
+    integer(C_INT), intent(in), value :: iband         !< Band profile ID
+    integer(C_INT), intent(in), value :: nalbedo       !< Number of albedo components
+    real(FLOTSAM_REAL), intent(in) :: albedo(nalbedo)  !< Surface albedo components
+    integer(C_INT), intent(in), value :: n             !< Number of particulate layers
+    integer(C_INT), intent(in) :: loc(n)               !< Location of particulate layers
+    real(FLOTSAM_REAL), intent(in) :: od(n)            !< Optical depth
+    real(FLOTSAM_REAL), intent(in) :: ssa(n)           !< Single-scattering albedo
+    real(FLOTSAM_REAL), intent(in) :: pf(n)            !< Phase func for single scattering
+    real(FLOTSAM_REAL), intent(in) :: pfc(*)         !< Phase function components
+    real(FLOTSAM_REAL), intent(out) :: reflectance !< Returned reflectance
+    real(FLOTSAM_REAL), intent(out) :: d_od
+  end function flotsam_radiance_jacobian_od
+
+!    As flotsam_reflectance_jacobian, but only computes jacobian for AOD
+!     .... using actual reflectance instead of radiance
    integer(C_INT) function flotsam_reflectance_jacobian_od(iband, nalbedo, albedo, &
        &  n, loc, od, ssa, pf, pfc, reflectance, d_od) bind(C)
     use, intrinsic :: ISO_C_BINDING
@@ -506,6 +524,7 @@ interface
     real(FLOTSAM_REAL), intent(out) :: reflectance !< Returned reflectance
     real(FLOTSAM_REAL), intent(out) :: d_od
   end function flotsam_reflectance_jacobian_od
+
 
 !    As flotsam_reflectance_jacobian, but avoiding the Adept start-up cost by
 !       keeping the Adept stack in global memory - this is faster but is

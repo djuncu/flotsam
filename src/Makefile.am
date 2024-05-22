@@ -37,7 +37,9 @@ libflotsam_la_SOURCES = \
 	rayleigh.cpp \
 	rayleigh.hpp \
 	reflectance.cpp \
-	reflectance.hpp
+	reflectance.hpp \
+	true_reflectance.cpp \
+	true_reflectance.hpp
 
 #	phase_function_exptan_35deg_reducedsmooth.cpp 
 #	phase_function_exptan_35deg_reducedsmooth.hpp 

@@ -17,6 +17,7 @@
 #include "OceanBRDF.hpp"
 #include "LookUpTable.hpp"
 #include "reflectance.hpp"
+#include "true_reflectance.hpp"
 
 #define CATCH_CPP_ERRORS
 
@@ -720,7 +721,7 @@ int flotsam_reflectance_jacobian(int iband,               /**< Band profile ID *
 
 }
 
-int flotsam_reflectance_jacobian_od(int iband,               /**< Band profile ID */
+int flotsam_radiance_jacobian_od(int iband,               /**< Band profile ID */
 				 int nalbedo,             /**< Number of albedo components */
 				 const flotsam_real* albedo, /**< Surface albedo components */
 				 int n,                   /**< Number of particulate layers */
@@ -822,6 +823,108 @@ int flotsam_reflectance_jacobian_od(int iband,               /**< Band profile I
 
 }
 
+int flotsam_reflectance_jacobian_od(int iband,               /**< Band profile ID */
+				 int nalbedo,             /**< Number of albedo components */
+				 const flotsam_real* albedo, /**< Surface albedo components */
+				 int n,                   /**< Number of particulate layers */
+				 const int* loc,          /**< Location of particulate layers */
+				 const flotsam_real* od,  /**< Optical depth */
+				 const flotsam_real* ssa, /**< Single-scattering albedo */
+				 const flotsam_real* pf,  /**< Phase func for single scattering */
+				 const flotsam_real* pfc, /**< Phase function components */
+                                 //const flotsam_real* cos_sza, /** to convert norm. radiance to refl.**/
+				 flotsam_real* reflectance,/**< Returned reflectance */
+				 flotsam_real* d_od      /**< d(reflectance)/d(od) */
+				 ) {
+
+  if (band_profile_list.count(iband) > 0) {
+    using namespace adept;
+
+    adept::Stack* old_stack = adept::active_stack();
+    if (old_stack) {
+      old_stack->deactivate();
+    }
+    const intVector my_loc(const_cast<int*>(loc), ExpressionSize<1>(n));
+
+    int status = FLOTSAM_SUCCESS;
+
+#ifdef CATCH_CPP_ERRORS
+    try
+#endif
+      { // Need opening bracket so that local stack is deactivated
+	// when it goes out of scope
+      adept::Stack stack;
+      // For speed we preallocate the likely space needed
+      stack.preallocate_statements(250*n);
+      stack.preallocate_operations(800*n);
+
+      BandProfile& band = band_profile_list[iband];
+      int n_pfc = lut.n_phase_function_components();
+
+      aVector a_albedo(nalbedo);
+      for (int i = 0; i < nalbedo; ++i) {
+	a_albedo[i] = albedo[i];
+      }
+      aVector a_od(n), a_ssa(n), a_pf(n);
+      aMatrix a_pfc(n, n_pfc);
+      for (int i = 0; i < n; ++i) {
+	a_od[i]  = od[i];
+	a_ssa[i] = ssa[i];
+	a_pf[i]  = pf[i];
+	for (int j = 0; j < n_pfc; ++j) {
+	  int index = i*n_pfc + j;
+	  a_pfc(i,j) = pfc[index];
+	}
+      }
+      aReal a_reflectance;
+
+      stack.new_recording();
+
+      // The "aReal" template argument ensures that the active version
+      // of the function (with automatic differentiation) is called
+      status = flotsam::true_reflectance<true>(band,
+					  a_albedo, my_loc, a_od, a_ssa,
+					  a_pf, a_pfc, //a_cos_sza,
+					  a_reflectance);
+      if (status != FLOTSAM_SUCCESS) {
+	if (old_stack) {
+	  stack.deactivate();
+	  old_stack->activate();
+	}
+	return status;
+      }
+
+      *reflectance = value(a_reflectance);
+
+      a_reflectance.set_gradient(1.0);
+      stack.reverse();
+      if (d_od) {
+	Vector jac(d_od, ExpressionSize<1>(n));
+	a_od.get_gradient(jac);
+      }
+    }
+#ifdef CATCH_CPP_ERRORS
+    catch (const std::exception& e) {
+      std::cerr << "An error occurred: " << e.what() << "\n";
+      status = FLOTSAM_AUTOMATIC_DIFFERENTIATION_ERROR;
+    }
+    catch (...) {
+      std::cerr << "An error occurred\n";
+      status = FLOTSAM_AUTOMATIC_DIFFERENTIATION_ERROR;
+    }
+#endif
+
+    if (old_stack) {
+      old_stack->activate();
+    }
+    return status;
+
+  }
+  else {
+    return FLOTSAM_INVALID_CONTEXT;
+  }
+
+}
 
 /*
 int flotsam_reflectance_jacobian_thread_unsafe(int iband,
